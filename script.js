@@ -6,10 +6,30 @@
   // Invisible captcha - track form render time
   let formRenderTime = null;
 
-  // Get script's directory to resolve campaigns.json path
-  const scriptPath = document.currentScript ? document.currentScript.src : '';
-  const scriptDir = scriptPath.substring(0, scriptPath.lastIndexOf('/'));
-  const campaignsJsonUrl = scriptDir ? scriptDir + '/campaigns.json' : 'campaigns.json';
+  // Backend API configuration - try multiple sources in order of preference
+  const getApiUrl = () => {
+    // 1. Check if frontend set it globally
+    if (window.HELIX_API_URL) return window.HELIX_API_URL;
+    
+    // 2. Check meta tag (can be set by frontend)
+    const metaTag = document.querySelector('meta[name="helix-api-url"]');
+    if (metaTag) return metaTag.getAttribute('content');
+    
+    // 3. Try to read from Vite env (if available in window)
+    if (window.__VITE_ENV__ && window.__VITE_ENV__.VITE_API_URL) {
+      return window.__VITE_ENV__.VITE_API_URL;
+    }
+    
+    // 4. Default fallback
+    return 'http://localhost:4100';
+  };
+  
+  const API_URL = getApiUrl();
+  
+  // Get authentication token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('helix_access_token');
+  };
 
   // Create floating "View Campaigns" button
   const campaignsButton = document.createElement("button");
@@ -240,17 +260,78 @@
   enquiryOverlay.appendChild(enquiryModal);
   document.body.appendChild(enquiryOverlay);
 
-  // Load campaigns from JSON
-  fetch(campaignsJsonUrl)
-    .then(response => response.json())
-    .then(data => {
-      campaignsData = data;
-      renderCampaignsList();
+  // Load campaigns from backend API
+  function loadCampaigns() {
+    const token = getAuthToken();
+    
+    if (!token) {
+      console.error('No authentication token found');
+      campaignsListBody.innerHTML = '<p style="text-align:center;color:rgb(113,118,128);padding:40px;">Please log in to view campaigns.</p>';
+      return;
+    }
+
+    const query = `{
+      campaigns(first: 50) {
+        edges {
+          node {
+            id
+            name
+            status
+            typeCustom
+            platform
+            startDate
+            endDate
+          }
+        }
+      }
+    }`;
+
+    fetch(`${API_URL}/graphql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ query })
     })
-    .catch(error => {
-      console.error('Error loading campaigns:', error);
-      campaignsListBody.innerHTML = '<p style="text-align:center;color:rgb(113,118,128);padding:40px;">Failed to load campaigns. Please try again later.</p>';
-    });
+      .then(response => response.json())
+      .then(result => {
+        if (result.errors) {
+          console.error('GraphQL errors:', result.errors);
+          campaignsListBody.innerHTML = '<p style="text-align:center;color:rgb(113,118,128);padding:40px;">Failed to load campaigns. Please try again later.</p>';
+          return;
+        }
+
+        // Transform backend campaigns to match expected format
+        const backendCampaigns = result.data?.campaigns?.edges?.map(edge => edge.node) || [];
+        
+        campaignsData = backendCampaigns.map(campaign => ({
+          id: campaign.id,
+          title: campaign.name || 'Untitled Campaign',
+          badge: campaign.typeCustom || campaign.platform || 'General',
+          excerpt: `Campaign status: ${campaign.status || 'Active'}`,
+          description: `This is a ${campaign.typeCustom || 'health'} campaign. Contact us for more details.`,
+          image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&h=400&fit=crop',
+          validUntil: campaign.endDate ? new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Ongoing',
+          features: [
+            'Professional consultation',
+            'Comprehensive assessment',
+            'Personalized care plan',
+            'Follow-up support'
+          ]
+        }));
+
+        console.log('Loaded campaigns from backend:', campaignsData);
+        renderCampaignsList();
+      })
+      .catch(error => {
+        console.error('Error loading campaigns:', error);
+        campaignsListBody.innerHTML = '<p style="text-align:center;color:rgb(113,118,128);padding:40px;">Failed to load campaigns. Please try again later.</p>';
+      });
+  }
+
+  // Load campaigns when script initializes
+  loadCampaigns();
 
   function renderCampaignsList() {
     const grid = document.createElement("div");
