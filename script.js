@@ -31,9 +31,33 @@
     return localStorage.getItem('helix_access_token');
   };
 
+  // Add CSS animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
   // Create floating "View Campaigns" button
   const campaignsButton = document.createElement("button");
-  campaignsButton.innerText = "View Health Campaigns";
+  campaignsButton.innerText = "View Packages";
   campaignsButton.id = "viewCampaignsBtn";
   Object.assign(campaignsButton.style, {
     position: "fixed",
@@ -81,33 +105,36 @@
     justifyContent: "center",
     zIndex: "10001",
     backdropFilter: "blur(4px)",
+    animation: "fadeIn 0.2s ease-out",
   });
 
   // Campaigns list modal
   const campaignsListModal = document.createElement("div");
   Object.assign(campaignsListModal.style, {
     backgroundColor: "rgb(255, 255, 255)",
-    borderRadius: "16px",
-    width: "900px",
+    borderRadius: "20px",
+    width: "1200px",
     maxWidth: "95%",
-    maxHeight: "85vh",
+    maxHeight: "90vh",
     overflow: "hidden",
-    boxShadow: "0px 20px 40px rgba(10, 13, 18, 0.15)",
+    boxShadow: "0px 24px 48px rgba(10, 13, 18, 0.2)",
     fontFamily: "'Satoshi', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif",
     display: "flex",
     flexDirection: "column",
+    animation: "slideUp 0.3s ease-out",
   });
 
   // Modal header
   const campaignsListHeader = document.createElement("div");
   Object.assign(campaignsListHeader.style, {
-    padding: "24px 32px",
+    padding: "32px 40px",
     borderBottom: "1px solid rgb(234, 236, 240)",
     position: "relative",
+    background: "linear-gradient(to bottom, rgb(255, 255, 255) 0%, rgb(250, 251, 252) 100%)",
   });
   campaignsListHeader.innerHTML = `
-    <h2 style="margin:0;font-family:'General Sans',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:28px;font-weight:700;color:rgb(24,29,39);">Health Campaigns</h2>
-    <p style="margin:8px 0 0 0;font-size:14px;color:rgb(113,118,128);">Discover our latest health initiatives and wellness programs</p>
+    <h2 style="margin:0;font-family:'General Sans',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:32px;font-weight:700;color:rgb(24,29,39);letter-spacing:-0.02em;">Health Campaigns</h2>
+    <p style="margin:10px 0 0 0;font-size:15px;color:rgb(113,118,128);line-height:1.5;">Discover our latest health initiatives and wellness programs</p>
   `;
 
   const campaignsListClose = document.createElement("span");
@@ -128,7 +155,7 @@
   // Modal body (scrollable)
   const campaignsListBody = document.createElement("div");
   Object.assign(campaignsListBody.style, {
-    padding: "24px 32px",
+    padding: "32px 40px",
     overflowY: "auto",
     flex: "1",
   });
@@ -260,6 +287,52 @@
   enquiryOverlay.appendChild(enquiryModal);
   document.body.appendChild(enquiryOverlay);
 
+  // Success modal overlay
+  const successOverlay = document.createElement("div");
+  Object.assign(successOverlay.style, {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(10, 13, 18, 0.6)",
+    display: "none",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: "10004",
+    backdropFilter: "blur(4px)",
+    animation: "fadeIn 0.2s ease-out",
+  });
+
+  const successModal = document.createElement("div");
+  Object.assign(successModal.style, {
+    backgroundColor: "rgb(255, 255, 255)",
+    padding: "48px 40px",
+    borderRadius: "20px",
+    width: "480px",
+    maxWidth: "90%",
+    boxSizing: "border-box",
+    position: "relative",
+    boxShadow: "0px 24px 48px rgba(10, 13, 18, 0.2)",
+    fontFamily: "'Satoshi', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif",
+    textAlign: "center",
+    animation: "slideUp 0.3s ease-out",
+  });
+
+  successModal.innerHTML = `
+    <div style="width:80px;height:80px;margin:0 auto 24px;background:linear-gradient(135deg, rgb(16, 185, 129) 0%, rgb(5, 150, 105) 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0px 8px 24px rgba(16, 185, 129, 0.3);">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <h2 style="margin:0 0 12px 0;font-family:'General Sans',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:28px;font-weight:700;color:rgb(24,29,39);">Thank You!</h2>
+    <p style="margin:0 0 32px 0;font-size:16px;color:rgb(113,118,128);line-height:1.6;">We've received your enquiry and our team will contact you shortly.</p>
+    <button id="successCloseBtn" style="padding:14px 32px;background:rgb(32,96,160);color:white;border:none;border-radius:10px;cursor:pointer;font-family:'Satoshi',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;font-weight:600;box-shadow:0px 2px 8px rgba(32,96,160,0.3);transition:all 0.2s ease;">Got it</button>
+  `;
+
+  successOverlay.appendChild(successModal);
+  document.body.appendChild(successOverlay);
+
   // Load campaigns from backend API
   function loadCampaigns() {
     const token = getAuthToken();
@@ -337,46 +410,60 @@
     const grid = document.createElement("div");
     Object.assign(grid.style, {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-      gap: "20px",
+      gridTemplateColumns: "repeat(3, 1fr)",
+      gap: "24px",
     });
 
     campaignsData.forEach(campaign => {
       const card = document.createElement("div");
       Object.assign(card.style, {
         background: "white",
-        borderRadius: "12px",
+        borderRadius: "16px",
         overflow: "hidden",
-        boxShadow: "0px 1px 3px rgba(10, 13, 18, 0.1)",
-        transition: "all 0.2s ease",
+        boxShadow: "0px 2px 8px rgba(10, 13, 18, 0.08)",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         cursor: "pointer",
         border: "1px solid rgb(234, 236, 240)",
+        display: "flex",
+        flexDirection: "column",
       });
 
       card.addEventListener("mouseenter", () => {
-        card.style.boxShadow = "0px 8px 16px rgba(10, 13, 18, 0.12)";
-        card.style.transform = "translateY(-4px)";
+        card.style.boxShadow = "0px 12px 24px rgba(10, 13, 18, 0.15)";
+        card.style.transform = "translateY(-6px)";
+        card.style.borderColor = "rgb(32, 96, 160)";
       });
 
       card.addEventListener("mouseleave", () => {
-        card.style.boxShadow = "0px 1px 3px rgba(10, 13, 18, 0.1)";
+        card.style.boxShadow = "0px 2px 8px rgba(10, 13, 18, 0.08)";
         card.style.transform = "translateY(0)";
+        card.style.borderColor = "rgb(234, 236, 240)";
       });
 
       card.innerHTML = `
-        <div style="width:100%;height:160px;background:linear-gradient(135deg, rgb(32, 96, 160) 0%, rgb(24, 76, 132) 100%);position:relative;">
-          <img src="${campaign.image}" style="width:100%;height:100%;object-fit:cover;" alt="${campaign.title}" />
+        <div style="width:100%;height:200px;background:rgb(248, 250, 252);position:relative;overflow:hidden;">
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgb(152,162,179);font-size:14px;font-weight:500;">
+            Campaign Image
+          </div>
         </div>
-        <div style="padding:16px;">
-          <span style="display:inline-block;padding:4px 10px;background:rgb(240,249,255);color:rgb(32,96,160);border-radius:6px;font-size:11px;font-weight:600;margin-bottom:10px;">${campaign.badge}</span>
-          <h3 style="margin:0 0 8px 0;font-family:'General Sans',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:18px;font-weight:700;color:rgb(24,29,39);line-height:1.3;">${campaign.title}</h3>
-          <p style="margin:0 0 12px 0;font-size:13px;color:rgb(113,118,128);line-height:1.5;">${campaign.excerpt}</p>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid rgb(234,236,240);">
-            <span style="font-size:11px;color:rgb(152,162,179);">Valid till ${campaign.validUntil}</span>
-            <span style="font-size:13px;font-weight:600;color:rgb(32,96,160);">Learn more →</span>
+        <div style="padding:20px;flex:1;display:flex;flex-direction:column;">
+          <span style="display:inline-block;padding:6px 12px;background:rgb(240,249,255);color:rgb(32,96,160);border-radius:8px;font-size:12px;font-weight:600;margin-bottom:12px;width:fit-content;">${campaign.badge}</span>
+          <h3 style="margin:0 0 10px 0;font-family:'General Sans',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:20px;font-weight:700;color:rgb(24,29,39);line-height:1.3;">${campaign.title}</h3>
+          <p style="margin:0 0 16px 0;font-size:14px;color:rgb(113,118,128);line-height:1.6;flex:1;">${campaign.excerpt}</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:16px;border-top:1px solid rgb(234,236,240);margin-top:auto;">
+            <span style="font-size:12px;color:rgb(152,162,179);font-weight:500;">Valid till ${campaign.validUntil}</span>
+            <span style="font-size:14px;font-weight:600;color:rgb(32,96,160);display:flex;align-items:center;gap:4px;">Learn more <span style="transition:transform 0.2s ease;">→</span></span>
           </div>
         </div>
       `;
+
+      const learnMoreArrow = card.querySelector('span:last-child span');
+      card.addEventListener("mouseenter", () => {
+        if (learnMoreArrow) learnMoreArrow.style.transform = "translateX(4px)";
+      });
+      card.addEventListener("mouseleave", () => {
+        if (learnMoreArrow) learnMoreArrow.style.transform = "translateX(0)";
+      });
 
       card.addEventListener("click", () => showCampaignDetail(campaign));
       grid.appendChild(card);
@@ -473,6 +560,28 @@
     selectedCampaign = null;
   });
 
+  // Success modal close button
+  const successCloseBtn = successModal.querySelector("#successCloseBtn");
+  successCloseBtn.addEventListener("mouseenter", () => {
+    successCloseBtn.style.background = "rgb(24, 76, 132)";
+    successCloseBtn.style.transform = "translateY(-2px)";
+    successCloseBtn.style.boxShadow = "0px 4px 12px rgba(32,96,160,0.4)";
+  });
+  successCloseBtn.addEventListener("mouseleave", () => {
+    successCloseBtn.style.background = "rgb(32, 96, 160)";
+    successCloseBtn.style.transform = "translateY(0)";
+    successCloseBtn.style.boxShadow = "0px 2px 8px rgba(32,96,160,0.3)";
+  });
+  successCloseBtn.addEventListener("click", () => {
+    successOverlay.style.display = "none";
+  });
+
+  successOverlay.addEventListener("click", (e) => {
+    if (e.target === successOverlay) {
+      successOverlay.style.display = "none";
+    }
+  });
+
   // Form submission
   enquiryForm.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -516,7 +625,7 @@
 
     console.log("Enquiry data:", data);
 
-    fetch("http://localhost:4100/embed/leads/create", {
+    fetch(`${API_URL}/embed/leads/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -530,7 +639,7 @@
         enquiryForm.reset();
         selectedCampaign = null;
         formRenderTime = null;
-        alert("Thank you for your interest! We will contact you soon.");
+        successOverlay.style.display = "flex";
       })
       .catch((error) => {
         console.error("Error submitting enquiry:", error);
@@ -538,7 +647,7 @@
         enquiryForm.reset();
         selectedCampaign = null;
         formRenderTime = null;
-        alert("Thank you for your interest! We will contact you soon.");
+        successOverlay.style.display = "flex";
       });
   });
 })();
